@@ -22,6 +22,22 @@
 
 using namespace std;
 
+void addToBuffer(std::vector<DataFrame> &dataBuffer, DataFrame &frame, int dataBufferSize = 2)
+{
+    if (dataBuffer.size() < dataBufferSize)
+    {
+        dataBuffer.push_back(frame);
+    }
+    else
+    {
+        for (int i = 1; i < dataBuffer.size(); i++)
+            dataBuffer[i-1] = dataBuffer[i];
+
+        dataBuffer[dataBuffer.size()-1] = frame;
+    }
+    // std::cout << "buffer size " << dataBuffer.size() << std::endl;
+}
+
 /* MAIN PROGRAM */
 int main(int argc, const char *argv[])
 {
@@ -91,7 +107,7 @@ int main(int argc, const char *argv[])
         // push image into data frame buffer
         DataFrame frame;
         frame.cameraImg = img;
-        dataBuffer.push_back(frame);
+        addToBuffer(dataBuffer, frame, dataBufferSize);
 
         cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
 
