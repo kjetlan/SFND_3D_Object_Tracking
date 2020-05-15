@@ -92,6 +92,50 @@ int main(int argc, const char *argv[])
 
     /* MAIN LOOP OVER ALL IMAGES */
 
+    // Configuration Parameters
+    const std::vector<string> detectorTypes   = {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"};
+    const std::vector<string> descriptorTypes = {"BRISK", "BRIEF", "ORB", "FREAK", "AKAZE", "SIFT"};
+    
+    int detectorIdx   = 2;
+    int descriptorIdx = 1;
+    if (argc > 1)
+    {
+        std::istringstream ss(argv[1]);
+        int x;
+        if (ss >> x) {
+            detectorIdx = x < detectorTypes.size() ? x : detectorTypes.size()-1;
+        }
+    }
+    if (argc > 2)
+    {
+        std::istringstream ss(argv[2]);
+        int x;
+        if (ss >> x) {
+            descriptorIdx = x < descriptorTypes.size() ? x : descriptorTypes.size()-1;
+        }
+    }
+
+    const string detectorType   = detectorTypes[detectorIdx]; // SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+    const string descriptorType = descriptorTypes[descriptorIdx]; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT (Non-Binary)
+
+    // check if detector and descriptor is compatible
+    if (detectorType == "ORB" && descriptorType == "SIFT")
+    {
+        std::cout << "SIFT descriptors can't be extracted with ORB detector" << std::endl;
+        return 0;
+    }
+    if (detectorType == "AKAZE" && descriptorType != "AKAZE")
+    {
+        std::cout << "AKAZE detector only works with AKAZE descriptors" << std::endl;
+        return 0;
+    }
+    if (detectorType != "AKAZE" && descriptorType == "AKAZE")
+    {
+        std::cout << "AKAZE descriptors only works with AKAZE detector" << std::endl;
+        return 0;
+    }
+    std::cout << detectorType << " & " << descriptorType << std::endl;
+
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex+=imgStepWidth)
     {
         /* LOAD IMAGE INTO BUFFER */
@@ -166,7 +210,7 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SHITOMASI";
+        // string detectorType = "FAST";
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
@@ -204,7 +248,7 @@ int main(int argc, const char *argv[])
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
         cv::Mat descriptors;
-        string descriptorType = "BRISK"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+        // string descriptorType = "BRIEF"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
 
         // push descriptors for current frame to end of data buffer
