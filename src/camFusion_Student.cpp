@@ -148,7 +148,58 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
                      std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
 {
-    // ...
+    double dT = 1/frameRate; // time between two measurements in seconds
+
+    sort(lidarPointsPrev.begin(), lidarPointsPrev.end(), [](LidarPoint a, LidarPoint b) {return a.x < b.x;});
+    sort(lidarPointsCurr.begin(), lidarPointsCurr.end(), [](LidarPoint a, LidarPoint b) {return a.x < b.x;});
+    
+    // compute robust lidar-based TTC
+    int midPrev = lidarPointsPrev.size()/2;
+    double medianDistancePrev;
+    if (lidarPointsPrev.size() % 2 == 0)
+    {
+        medianDistancePrev = (lidarPointsPrev[midPrev-1].x + lidarPointsPrev[midPrev].x) / 2.0;
+    }
+    else
+    {
+        medianDistancePrev = lidarPointsPrev[midPrev].x;
+    }
+
+    int midCurr = lidarPointsCurr.size()/2;
+    double medianDistanceCurr;
+    if (lidarPointsCurr.size() % 2 == 0)
+    {
+        medianDistanceCurr = (lidarPointsCurr[midCurr-1].x + lidarPointsCurr[midCurr].x) / 2.0;
+    }
+    else
+    {
+        medianDistanceCurr = lidarPointsCurr[midCurr].x;
+    }
+
+    // parameter tuned based on lidar data
+    // double maxDeviation = 0.2; // [m]
+
+    double minDistancePrev = medianDistancePrev;
+    double minDistanceCurr = medianDistanceCurr;
+    
+    // for (auto lp : lidarPointsPrev)
+    // {
+    //     if (lp.x < minDistancePrev && lp.x > medianDistancePrev - maxDeviation)
+    //         minDistancePrev = lp.x;
+    // }
+    // for (auto lp : lidarPointsCurr)
+    // {
+    //     if (lp.x < minDistanceCurr && lp.x > medianDistanceCurr - maxDeviation)
+    //         minDistanceCurr = lp.x;
+    // }
+
+    // 0 = x0 - v*t -> t = x0/v
+    float dist = minDistanceCurr; // [m]
+    float vel = (minDistancePrev - minDistanceCurr) / dT; // [m/s]
+    TTC = dist / vel;
+
+    // std::cout << "lidar distance (prev) :: " << minDistancePrev << std::endl;
+    // std::cout << "lidar distance (curr) :: " << minDistanceCurr << std::endl;
 }
 
 
